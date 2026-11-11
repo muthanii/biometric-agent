@@ -1,0 +1,22 @@
+# Local credentials and configuration
+.env
+.env.*
+!.env.example
+config.toml
+
+# Agent state and logs
+state.json
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
