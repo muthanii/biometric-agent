@@ -1,0 +1,1 @@
+"""Standalone ZKTeco attendance agent."""
