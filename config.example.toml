@@ -1,0 +1,118 @@
+# The LAN-side biometric agent -- the multi-terminal form.
+#
+# For ONE terminal you do not need this file at all: put everything in `.env`
+# (see .env.example) and the agent runs from the environment alone. Use this
+# when there is more than one door, or when you want the device list under
+# version control somewhere.
+#
+# Copy it to config.toml, edit it, and uncomment the volume in compose.yaml
+# that mounts it at /etc/tk-biometric/config.toml.
+#
+# Anything set in the environment still wins over this file, so credentials can
+# stay in `.env` while the devices live here. The one exception is
+# TK_BIOMETRIC_DEVICE_IP: setting that means "one terminal, from the
+# environment", and the [[devices]] blocks below are ignored with a warning.
+#
+# This file is the device list -- there is no Biometric Device record involved,
+# because the site does not need this app installed at all. All it needs is
+# Frappe HR and an API key.
+
+[site]
+# No trailing slash needed; one is stripped if you leave it.
+url = "https://erp.example.iq"
+
+# Prefer the environment for these two (TK_BIOMETRIC_API_KEY and
+# TK_BIOMETRIC_API_SECRET, see .env.example); env wins over anything set here.
+# api_key = ""
+# api_secret = ""
+
+# Seconds to wait on the site. Not the device timeout -- that is per device.
+timeout = 30
+
+
+[sync]
+# Seconds between runs. Ignored with --once.
+interval = 900
+
+# REQUIRED. Punches before this date are ignored, for good.
+#
+# A terminal that has never been cleared holds years of punches, every one of
+# them an HTTP request, and the Attendance they create lands in payroll periods
+# that are already closed. Set this to the date you actually want to begin. The
+# agent refuses to start without it.
+import_start_date = "2026-01-01"
+
+# Which Employee field holds the device user id: attendance_device_id or name.
+# Leave it -- Frappe HR provides attendance_device_id for exactly this, on
+# Employee -> Attendance -> Attendance Device ID.
+employee_fieldname = "attendance_device_id"
+
+# Which punch codes mean which direction, for devices set to AUTO below.
+# The defaults match stock ZKTeco firmware. A string like "0, 4" also works.
+punch_values_in = [0, 4]
+punch_values_out = [1, 5]
+
+# Move Shift Type.last_sync_of_checkin from this agent. Leave it OFF.
+#
+# A site with the teebatkarbala app does this itself, from the Shift Types table
+# on each Biometric Device record, across every agent at every site. This agent
+# can only see the devices below, so with a second site running it would declare
+# a shift complete while the other site's terminal had reported nothing.
+#
+# Only for a site running stock Frappe HR, and only with exactly one agent.
+update_shift_last_sync = false
+
+# The sync cursor. Keep it on a volume: losing it means re-reading every
+# terminal from import_start_date. That is safe -- the duplicate check drops
+# the repeats -- but it is a wasted run.
+state_file = "/var/lib/tk-biometric-agent/state.json"
+
+
+# One block per terminal. Add as many as you have.
+[[devices]]
+# Stamped verbatim onto every checkin this terminal produces, and what people
+# filter the checkin report by. Letters, digits, hyphens and underscores only.
+device_id = "Main-Door"
+
+# As reachable from *this machine*, not from the site.
+ip = "192.168.1.50"
+port = 4370
+
+# The numeric COMM key set on the terminal; 0 if none.
+comm_key = 0
+
+# Seconds to wait on the device. Raise it for a terminal on a thin link.
+timeout = 30
+
+# pyzk falls back to UDP by itself when TCP is refused. Only force it if you
+# know you need it -- TCP keeps large log reads from fragmenting.
+force_udp = false
+
+# AUTO  - the terminal reports IN/OUT properly; codes map per punch_values_*
+# IN    - a single-purpose entry door; the terminal's own code is ignored
+# OUT   - a single-purpose exit door
+# None  - leave the direction blank, for a Shift Type set to "Alternating entries"
+#
+# Many terminals only ever report code 255. Under AUTO that yields a checkin
+# with no direction, which is correct -- it is not an error.
+punch_direction = "AUTO"
+
+# Wipe the terminal's memory, and only ever *after* every punch has landed on
+# the site. Use it on a terminal whose memory fills up. On any other terminal
+# leave it off: the device log is your only backup.
+clear_after_sync = false
+
+# Only read when update_shift_last_sync is on. Otherwise the mapping lives on
+# the Biometric Device record in the desk.
+# shift_types = ["Day Shift"]
+
+# Stamped onto the checkin, if your site uses shift locations.
+# latitude = 32.6160
+# longitude = 44.0249
+
+
+# [[devices]]
+# device_id = "Warehouse-Gate"
+# ip = "192.168.1.51"
+# punch_direction = "AUTO"
+# shift_types = ["Night Shift"]

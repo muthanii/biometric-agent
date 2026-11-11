@@ -1,0 +1,59 @@
+# Run from this directory:
+#
+#   cp .env.example .env      # fill in the site URL, API key/secret and device IP
+#   docker compose up -d
+#   docker compose logs -f
+#
+# One-shot instead of a loop (for a host that already has cron):
+#   docker compose run --rm agent --once
+#
+# Try it without writing anything to the site:
+#   docker compose run --rm agent --once --dry-run
+
+services:
+  agent:
+    build:
+      # The app package is the build context; the Dockerfile installs it.
+      context: ../..
+      dockerfile: docker/biometric-agent/Dockerfile
+    image: tk-biometric-agent
+    container_name: tk-biometric-agent
+    restart: unless-stopped
+
+    # Shown on the Biometric Device record as the agent host. Without it the
+    # site reports a container id, which tells nobody which machine this is.
+    hostname: ${TK_BIOMETRIC_AGENT_HOST:-biometric-agent}
+
+    # Every setting is a TK_BIOMETRIC_* variable, so this one file is the whole
+    # configuration for a single terminal. See .env.example.
+    env_file:
+      - .env
+
+    environment:
+      # `:?` fails the run loudly rather than starting with an empty key and
+      # discovering it as a 403 fifteen minutes later.
+      TK_BIOMETRIC_API_KEY: ${TK_BIOMETRIC_API_KEY:?set this in .env}
+      TK_BIOMETRIC_API_SECRET: ${TK_BIOMETRIC_API_SECRET:?set this in .env}
+
+    volumes:
+      # The sync cursor. Losing it costs one slow re-read, not duplicate
+      # attendance -- but there is no reason to pay that on every recreate.
+      - state:/var/lib/tk-biometric-agent
+
+      # More than one terminal? Write config.toml (see config.example.toml) and
+      # uncomment this. Settings in .env still win over the file, so the API key
+      # can stay there.
+      # - ./config.toml:/etc/tk-biometric/config.toml:ro
+
+    # The terminals are on the LAN this host is already on; the default bridge
+    # routes to them. Uncomment only if your network needs the host's stack.
+    # network_mode: host
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  state:
