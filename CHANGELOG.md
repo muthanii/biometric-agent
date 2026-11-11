@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/muthanii/biometric-agent/compare/v0.2.0...v0.3.0) (2026-11-11)
+
+
+### Features
+
+* implement GitHub Container Registry publishing and update README with usage instructions ([bd4a428](https://github.com/muthanii/biometric-agent/commit/bd4a428a5f18ac7e99146ff6aef362d49319f8e6))
+
 ## [0.2.0](https://github.com/muthanii/biometric-agent/compare/v0.1.0...v0.2.0) (2026-11-11)
 
 
