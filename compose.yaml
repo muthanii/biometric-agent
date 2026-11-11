@@ -12,10 +12,8 @@
 
 services:
   agent:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: tk-biometric-agent
+    image: ghcr.io/muthanii/biometric-agent:latest
+    pull_policy: always
     container_name: tk-biometric-agent
     restart: unless-stopped
 

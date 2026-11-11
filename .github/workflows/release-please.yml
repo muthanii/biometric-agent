@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
   pull-requests: write
 
 jobs:
@@ -14,7 +15,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create or update release PR
+        id: release
         uses: googleapis/release-please-action@v4
         with:
           config-file: .github/release-please/config.json
           manifest-file: .github/release-please/manifest.json
+
+      - name: Check out release
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release.outputs.tag_name }}
+
+      - name: Set up QEMU
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare image metadata
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        id: metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ steps.release.outputs.tag_name }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.release.outputs.tag_name }}
+            type=raw,value=latest
+
+      - name: Build and publish image
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}

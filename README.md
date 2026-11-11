@@ -37,12 +37,20 @@ Try a read-only pass, then start the service:
 
 ```sh
 docker compose run --rm agent --once --dry-run
-docker compose up -d --build
+docker compose up -d
 docker compose logs -f agent
 ```
 
 The dry run does not create checkins or write sync state. The service then syncs
 every 15 minutes by default. To stop it, run `docker compose down`.
+
+The Compose file pulls the published image from
+`ghcr.io/muthanii/biometric-agent:latest`. If the package is private, log in to
+GHCR on the host first with a GitHub token that has `read:packages`:
+
+```sh
+echo "$GHCR_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
 
 ## Multiple terminals
 
@@ -55,7 +63,7 @@ For multiple terminals, configure them in TOML rather than using the single
 3. Remove or blank `TK_BIOMETRIC_DEVICE_IP` in `.env`; when it is set, the
    environment-configured terminal takes precedence over TOML device blocks.
 4. Uncomment the `config.toml` volume mount in `compose.yaml`.
-5. Start or rebuild the service with `docker compose up -d --build`.
+5. Start or update the service with `docker compose up -d`.
 
 Environment settings override values in `config.toml`. See
 [`config.example.toml`](./config.example.toml) for device options such as punch
@@ -107,7 +115,10 @@ the Docker image.
 Releases use [Conventional Commits](https://www.conventionalcommits.org/).
 Release Please creates or updates a release pull request after qualifying
 commits reach `main`. Merging that release PR updates the version and changelog,
-then creates the corresponding GitHub release and SemVer tag.
+then creates the corresponding GitHub release and SemVer tag. The release
+workflow builds multi-platform (`linux/amd64`, `linux/arm64`) images and
+publishes versioned, `major.minor`, and `latest` tags to GHCR. For example:
+`ghcr.io/muthanii/biometric-agent:0.1.0`.
 
 Use commit subjects such as:
 
