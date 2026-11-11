@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/muthanii/biometric-agent/compare/v0.3.0...v0.3.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* **logging:** improve logging messages for clarity and sensitivity ([a6dedd6](https://github.com/muthanii/biometric-agent/commit/a6dedd63d0cb5c4d7316902fcd2c96c524e34066))
+
 ## [0.3.0](https://github.com/muthanii/biometric-agent/compare/v0.2.0...v0.3.0) (2026-11-11)
 
 
