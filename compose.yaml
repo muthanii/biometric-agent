@@ -13,9 +13,8 @@
 services:
   agent:
     build:
-      # The app package is the build context; the Dockerfile installs it.
-      context: ../..
-      dockerfile: docker/biometric-agent/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     image: tk-biometric-agent
     container_name: tk-biometric-agent
     restart: unless-stopped
