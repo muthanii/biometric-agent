@@ -97,3 +97,27 @@ docker compose run --rm agent --once --dry-run
 Use a dedicated site API user with only the permissions the agent needs. Keep
 `.env` and any `config.toml` containing credentials out of version control, and
 do not include API secrets in logs or support requests.
+
+## CI and releases
+
+GitHub Actions runs on pull requests and pushes to `main`. CI installs the
+Python requirements, checks source compilation and the agent CLI, and builds
+the Docker image.
+
+Releases use [Conventional Commits](https://www.conventionalcommits.org/).
+Release Please creates or updates a release pull request after qualifying
+commits reach `main`. Merging that release PR updates the version and changelog,
+then creates the corresponding GitHub release and SemVer tag.
+
+Use commit subjects such as:
+
+```text
+fix: handle unreachable terminals
+feat: support multiple devices
+feat!: change the configuration format
+```
+
+`fix` triggers a patch release, `feat` a minor release, and a breaking change
+(for example, `!` or a `BREAKING CHANGE:` footer) a major release. Other
+Conventional Commit types can be included in the changelog without triggering
+a release by themselves.
