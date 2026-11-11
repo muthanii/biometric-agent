@@ -956,9 +956,8 @@ def run_once(config: Config, client: SiteClient, state: State) -> dict:
 		# report success having imported nothing. That silence is the most
 		# common way this integration appears to be broken.
 		log.warning(
-			"No employee has %s set, so every punch will be skipped. "
-			"Fill it in on Employee -> Attendance -> Attendance Device ID.",
-			settings.employee_fieldname,
+			"No employee has a configured device ID field set, so every punch will be skipped. "
+			"Fill it in on Employee -> Attendance -> Attendance Device ID."
 		)
 
 	results = {}
@@ -1115,7 +1114,8 @@ def main(argv=None) -> int:
 	# Fail fast and loudly. A bad key that only shows up as a 403 on the first
 	# punch is a bad key discovered fifteen minutes late.
 	try:
-		log.info("Authenticated to %s as %s", settings.url, client.whoami())
+		client.whoami()
+		log.info("Site authentication succeeded.")
 	except SiteError as e:
 		log.error("%s", e)
 		return 3
